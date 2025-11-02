@@ -1,7 +1,23 @@
 import json
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 from playwright.async_api import async_playwright
+
+def get_mexico_trend_time():
+    """
+    Retorna la hora actual en México con formato estructurado.
+    """
+    mexico_tz = pytz.timezone('America/Mexico_City')
+    now = datetime.now(mexico_tz)
+    return {
+        "timestamp_iso": now.isoformat(),
+        "day": now.day,
+        "month": now.month,
+        "year": now.year,
+        "hour": now.hour,
+        "minute": now.minute
+    }
 
 async def scrape_google_trends_mexico():
     """
@@ -85,8 +101,11 @@ async def scrape_google_trends_mexico():
             
             await browser.close()
             
+            mexico_time = get_mexico_trend_time()
+            
             result = {
                 "timestamp": datetime.now().isoformat(),
+                "timestamp_mexico": mexico_time,
                 "country": "México",
                 "geo_code": "MX",
                 "timeframe": "Últimas 24 horas",
@@ -101,8 +120,10 @@ async def scrape_google_trends_mexico():
         except asyncio.TimeoutError as e:
             print(f"[v0] Timeout: {e}")
             await browser.close()
+            mexico_time = get_mexico_trend_time()
             return {
                 "timestamp": datetime.now().isoformat(),
+                "timestamp_mexico": mexico_time,
                 "country": "México",
                 "geo_code": "MX",
                 "timeframe": "Últimas 24 horas",
@@ -115,8 +136,10 @@ async def scrape_google_trends_mexico():
         except Exception as e:
             print(f"[v0] Error: {type(e).__name__}: {e}")
             await browser.close()
+            mexico_time = get_mexico_trend_time()
             return {
                 "timestamp": datetime.now().isoformat(),
+                "timestamp_mexico": mexico_time,
                 "country": "México",
                 "geo_code": "MX",
                 "timeframe": "Últimas 24 horas",

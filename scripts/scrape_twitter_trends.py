@@ -1,8 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
+import pytz
 
 def normalize_tweet_count(count_str):
     """
@@ -40,6 +41,77 @@ def normalize_tweet_count(count_str):
     
     return 0
 
+def extract_minutes_ago_from_row(row):
+    """
+    Extrae 'X minutes ago' del HTML de la fila.
+    Retorna el número de minutos, o None si es antiguo (horas/días).
+    """
+    try:
+        # Buscar texto que contenga 'minutes ago'
+        row_text = row.get_text(separator=' ')
+        match = re.search(r'(\d+)\s+minutes?\s+ago', row_text, re.IGNORECASE)
+        if match:
+            minutes = int(match.group(1))
+            print(f"[v0] Minutos desde actualización: {minutes}")
+            return minutes
+        
+        # Si contiene 'hour' o 'day', es antiguo
+        if 'hour' in row_text.lower() or 'day' in row_text.lower():
+            print(f"[v0] Tendencia antigua (horas/días)")
+            return None
+        
+        return None
+    except:
+        return None
+
+def should_update_based_on_freshness(trends_data, max_minutes=20):
+    """
+    Verifica si los datos son lo suficientemente recientes para sobreescribir JSON.
+    Solo retorna True si hay al menos una tendencia actualizada hace menos de 20 minutos.
+    """
+    print(f"\n[v0] Verificando frescura de datos (máximo: {max_minutes} minutos)...")
+    
+    # Si no hay tendencias, no actualizar
+    if not trends_data.get('trends') or len(trends_data['trends']) == 0:
+        print("[v0] ✗ No hay tendencias, no se actualizará el JSON")
+        return False
+    
+    # Buscar al menos una tendencia reciente
+    for trend in trends_data['trends'][:5]:  # Revisar las primeras 5
+        if trend.get('minutes_since_update') is not None:
+            minutes = trend.get('minutes_since_update')
+            if minutes < max_minutes:
+                print(f"[v0] ✓ Datos suficientemente frescos ({minutes} < {max_minutes} minutos)")
+                return True
+    
+    print(f"[v0] ✗ Datos no son lo suficientemente frescos (≥ {max_minutes} minutos)")
+    return False
+
+def get_trend_time_in_mexico(minutes_ago=None):
+    """
+    Calcula la hora real en México a la que corresponden las tendencias.
+    Si minutes_ago es proporcionado, resta esos minutos a la hora actual.
+    Retorna formato estructurado: {day, month, year, hour, minute, timestamp_iso}
+    """
+    mexico_tz = pytz.timezone('America/Mexico_City')
+    now = datetime.now(mexico_tz)
+    
+    if minutes_ago is not None and isinstance(minutes_ago, int):
+        # Restar los minutos para obtener la hora real de la tendencia
+        trend_time = now - timedelta(minutes=minutes_ago)
+    else:
+        # Si no hay info de minutos, usar hora actual
+        trend_time = now
+    
+    return {
+        "timestamp_iso": trend_time.isoformat(),
+        "day": trend_time.day,
+        "month": trend_time.month,
+        "year": trend_time.year,
+        "hour": trend_time.hour,
+        "minute": trend_time.minute
+    }
+
 def scrape_twitter_trends_mexico():
     """
     Extrae top 40 tendencias de Twitter para México desde xtrends.iamrohit.in
@@ -76,6 +148,7 @@ def scrape_twitter_trends_mexico():
             print("[v0] ERROR: Tabla no encontrada")
             return {
                 "timestamp": datetime.now().isoformat(),
+                "timestamp_mexico": get_trend_time_in_mexico(),
                 "country": "México",
                 "platform": "Twitter/X",
                 "total_trends": 0,
@@ -93,6 +166,7 @@ def scrape_twitter_trends_mexico():
             print("[v0] ERROR: tbody no encontrado")
             return {
                 "timestamp": datetime.now().isoformat(),
+                "timestamp_mexico": get_trend_time_in_mexico(),
                 "country": "México",
                 "platform": "Twitter/X",
                 "total_trends": 0,
@@ -137,11 +211,21 @@ def scrape_twitter_trends_mexico():
                 # Normalizar volumen
                 tweet_volume = normalize_tweet_count(tweet_count_str)
                 
+                if tweet_volume == 1000:
+                    print(f"[v0] Volumen exacto 1000 detectado, cambiando a -1")
+                    tweet_volume = -1
+                
+                minutes_ago = extract_minutes_ago_from_row(row)
+                
+                trend_time = get_trend_time_in_mexico(minutes_ago)
+                
                 trend_obj = {
                     "rank": int(rank),
                     "term": trend_name,
                     "tweet_volume": tweet_volume,
                     "tweet_volume_text": tweet_count_str,
+                    "minutes_since_update": minutes_ago,
+                    "trend_time_mexico": trend_time,
                     "url": tweet_link.get('href', '')
                 }
                 
@@ -168,6 +252,7 @@ def scrape_twitter_trends_mexico():
         
         result = {
             "timestamp": datetime.now().isoformat(),
+            "timestamp_mexico": get_trend_time_in_mexico(),
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": valid_count,
@@ -186,6 +271,7 @@ def scrape_twitter_trends_mexico():
         print("[v0] ERROR: Timeout - La solicitud tardó demasiado")
         return {
             "timestamp": datetime.now().isoformat(),
+            "timestamp_mexico": get_trend_time_in_mexico(),
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": 0,
@@ -199,6 +285,7 @@ def scrape_twitter_trends_mexico():
         print(f"[v0] ERROR: Conexión rechazada - {e}")
         return {
             "timestamp": datetime.now().isoformat(),
+            "timestamp_mexico": get_trend_time_in_mexico(),
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": 0,
@@ -212,6 +299,7 @@ def scrape_twitter_trends_mexico():
         print(f"[v0] ERROR GENERAL: {type(e).__name__}: {e}")
         return {
             "timestamp": datetime.now().isoformat(),
+            "timestamp_mexico": get_trend_time_in_mexico(),
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": 0,
@@ -225,13 +313,15 @@ if __name__ == "__main__":
     print("[v0] Iniciando scraper de Twitter Trends...")
     data = scrape_twitter_trends_mexico()
     
-    # Guardar en JSON
-    output_file = 'twitter_trends_data.json'
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    if should_update_based_on_freshness(data, max_minutes=20):
+        output_file = 'twitter_trends_data.json'
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"\n[v0] ✓ Datos guardados en {output_file}")
+    else:
+        print(f"\n[v0] ✗ Datos NO se guardaron (no lo suficientemente frescos)")
     
     print(f"\n[v0] ========== SCRAPING COMPLETADO ==========")
-    print(f"[v0] Datos guardados en {output_file}")
     print(f"[v0] Status: {data['status']}")
     print(f"[v0] Tendencias extraídas: {data['total_trends']}")
     print("\n" + json.dumps(data, ensure_ascii=False, indent=2))

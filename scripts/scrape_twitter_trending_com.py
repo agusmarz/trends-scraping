@@ -2,7 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import json
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 
 def extract_minutes_ago(time_text):
     """
@@ -39,6 +40,52 @@ def extract_minutes_ago(time_text):
     
     print(f"[v0]   ? Formato desconocido: {time_text}")
     return None
+
+def extract_minutes_from_datetime(date_string):
+    """
+    Calcula cuántos minutos hace fue creada una tendencia basado en dateCreated.
+    date_string ejemplo: "2025-11-02T10:30:00Z"
+    Retorna el número de minutos, o None si es antiguo (>20 minutos).
+    """
+    if not date_string:
+        return None
+    
+    try:
+        # Parsear fecha ISO 8601
+        created_time = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
+        now = datetime.now(created_time.tzinfo) if created_time.tzinfo else datetime.now()
+        
+        time_diff = now - created_time
+        minutes_ago = int(time_diff.total_seconds() / 60)
+        
+        print(f"[v0] Tiempo desde creación: {minutes_ago} minutos")
+        return minutes_ago
+    except Exception as e:
+        print(f"[v0] Error parseando fecha: {e}")
+        return None
+
+def should_update_based_on_freshness(trends_data, max_minutes=20):
+    """
+    Verifica si los datos son lo suficientemente recientes para sobreescribir JSON.
+    Solo retorna True si hay al menos una tendencia actualizada hace menos de 20 minutos.
+    """
+    print(f"\n[v0] Verificando frescura de datos (máximo: {max_minutes} minutos)...")
+    
+    # Si no hay tendencias, no actualizar
+    if not trends_data.get('trends') or len(trends_data['trends']) == 0:
+        print("[v0] ✗ No hay tendencias, no se actualizará el JSON")
+        return False
+    
+    # Buscar al menos una tendencia reciente
+    for trend in trends_data['trends'][:10]:  # Revisar las primeras 10
+        if trend.get('minutes_since_creation') is not None:
+            minutes = trend.get('minutes_since_creation')
+            if minutes < max_minutes:
+                print(f"[v0] ✓ Datos suficientemente frescos ({minutes} < {max_minutes} minutos)")
+                return True
+    
+    print(f"[v0] ✗ Datos no son lo suficientemente frescos (≥ {max_minutes} minutos)")
+    return False
 
 def scrape_twitter_trending_mexico():
     """
@@ -109,15 +156,33 @@ def scrape_twitter_trending_mexico():
             name = item.get('name', '').strip()
             tweet_count = item.get('Tweet Count', 0)
             url_trend = item.get('url', '')
+            date_created = item.get('dateCreated', '')
             
             if not name:
                 print(f"[v0] ⚠ Item {position} sin nombre, saltando")
                 continue
             
+            if tweet_count == 1000:
+                print(f"[v0] Volumen exacto 1000 detectado, cambiando a -1")
+                tweet_count = -1
+            
+            minutes_since_creation = extract_minutes_from_datetime(date_created)
+            
+            trend_time = get_trend_time_from_creation(date_created) if date_created else {
+                "timestamp_iso": datetime.now(pytz.timezone('America/Mexico_City')).isoformat(),
+                "day": datetime.now(pytz.timezone('America/Mexico_City')).day,
+                "month": datetime.now(pytz.timezone('America/Mexico_City')).month,
+                "year": datetime.now(pytz.timezone('America/Mexico_City')).year,
+                "hour": datetime.now(pytz.timezone('America/Mexico_City')).hour,
+                "minute": datetime.now(pytz.timezone('America/Mexico_City')).minute,
+            }
+            
             trend_data = {
                 "rank": position,
                 "term": name,
                 "tweet_volume": tweet_count,
+                "minutes_since_creation": minutes_since_creation,
+                "trend_time_mexico": trend_time,
                 "url": url_trend
             }
             
@@ -126,8 +191,19 @@ def scrape_twitter_trending_mexico():
         
         print(f"\n[v0] ✓ {len(trends_list)} tendencias extraídas correctamente")
         
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        mexico_time_now = datetime.now(mexico_tz)
+        
         result = {
             "timestamp": datetime.now().isoformat(),
+            "timestamp_mexico": {
+                "timestamp_iso": mexico_time_now.isoformat(),
+                "day": mexico_time_now.day,
+                "month": mexico_time_now.month,
+                "year": mexico_time_now.year,
+                "hour": mexico_time_now.hour,
+                "minute": mexico_time_now.minute
+            },
             "country": "México",
             "platform": "Twitter/X",
             "source": "twitter-trending.com",
@@ -157,21 +233,64 @@ def generate_example_data():
     """
     print("[v0] Usando datos de ejemplo como fallback...")
     
+    mexico_tz = pytz.timezone('America/Mexico_City')
+    now = datetime.now(mexico_tz)
+    
     example_trends = [
-        {"rank": 1, "term": "Carlos Manzo", "tweet_volume": 1000},
-        {"rank": 2, "term": "#FueClaudia", "tweet_volume": 28000},
-        {"rank": 3, "term": "Michoacán", "tweet_volume": 180000},
-        {"rank": 4, "term": "Calderón", "tweet_volume": 12000},
-        {"rank": 5, "term": "#FueElEstado", "tweet_volume": 12399},
-        {"rank": 6, "term": "Gabinete de Seguridad", "tweet_volume": 19000},
-        {"rank": 7, "term": "Chinguen", "tweet_volume": 15399},
-        {"rank": 8, "term": "Cállate", "tweet_volume": 8987},
-        {"rank": 9, "term": "Colosio", "tweet_volume": 3859},
-        {"rank": 10, "term": "#MexicoDeLuto", "tweet_volume": 5909},
+        {
+            "rank": 1,
+            "term": "Carlos Manzo",
+            "tweet_volume": -1,
+            "minutes_since_creation": 5,
+            "trend_time_mexico": {
+                "timestamp_iso": (now - timedelta(minutes=5)).isoformat(),
+                "day": (now - timedelta(minutes=5)).day,
+                "month": (now - timedelta(minutes=5)).month,
+                "year": (now - timedelta(minutes=5)).year,
+                "hour": (now - timedelta(minutes=5)).hour,
+                "minute": (now - timedelta(minutes=5)).minute,
+            }
+        },
+        {
+            "rank": 2,
+            "term": "#FueClaudia",
+            "tweet_volume": 28000,
+            "minutes_since_creation": 8,
+            "trend_time_mexico": {
+                "timestamp_iso": (now - timedelta(minutes=8)).isoformat(),
+                "day": (now - timedelta(minutes=8)).day,
+                "month": (now - timedelta(minutes=8)).month,
+                "year": (now - timedelta(minutes=8)).year,
+                "hour": (now - timedelta(minutes=8)).hour,
+                "minute": (now - timedelta(minutes=8)).minute,
+            }
+        },
+        {
+            "rank": 3,
+            "term": "Michoacán",
+            "tweet_volume": 180000,
+            "minutes_since_creation": 12,
+            "trend_time_mexico": {
+                "timestamp_iso": (now - timedelta(minutes=12)).isoformat(),
+                "day": (now - timedelta(minutes=12)).day,
+                "month": (now - timedelta(minutes=12)).month,
+                "year": (now - timedelta(minutes=12)).year,
+                "hour": (now - timedelta(minutes=12)).hour,
+                "minute": (now - timedelta(minutes=12)).minute,
+            }
+        },
     ]
     
     return {
         "timestamp": datetime.now().isoformat(),
+        "timestamp_mexico": {
+            "timestamp_iso": now.isoformat(),
+            "day": now.day,
+            "month": now.month,
+            "year": now.year,
+            "hour": now.hour,
+            "minute": now.minute
+        },
         "country": "México",
         "platform": "Twitter/X",
         "source": "twitter-trending.com",
@@ -180,20 +299,61 @@ def generate_example_data():
         "status": "example_data"
     }
 
+def get_trend_time_from_creation(date_created_str):
+    """
+    Calcula la hora real en México a la que corresponden las tendencias
+    basado en el dateCreated del JSON-LD.
+    Retorna formato estructurado: {day, month, year, hour, minute, timestamp_iso}
+    """
+    try:
+        # Parsear fecha ISO 8601
+        created_time = datetime.fromisoformat(date_created_str.replace('Z', '+00:00'))
+        
+        # Convertir a zona horaria de México
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        created_time_mexico = created_time.astimezone(mexico_tz)
+        
+        return {
+            "timestamp_iso": created_time_mexico.isoformat(),
+            "day": created_time_mexico.day,
+            "month": created_time_mexico.month,
+            "year": created_time_mexico.year,
+            "hour": created_time_mexico.hour,
+            "minute": created_time_mexico.minute
+        }
+    except Exception as e:
+        print(f"[v0] Error parseando fecha: {e}")
+        # Retornar hora actual si hay error
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        now = datetime.now(mexico_tz)
+        return {
+            "timestamp_iso": now.isoformat(),
+            "day": now.day,
+            "month": now.month,
+            "year": now.year,
+            "hour": now.hour,
+            "minute": now.minute
+        }
+
 if __name__ == "__main__":
     print("[v0] Iniciando scraper de twitter-trending.com...\n")
     data = scrape_twitter_trending_mexico()
     
-    # Guardar en JSON
-    output_file = 'twitter_trending_com_data.json'
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    if should_update_based_on_freshness(data, max_minutes=20):
+        output_file = 'twitter_trending_com_data.json'
+        with open(output_file, 'w', encoding='utf-8') as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        print(f"\n[v0] ✓ Datos guardados en {output_file}")
+    else:
+        print(f"\n[v0] ✗ Datos NO se guardaron (no lo suficientemente frescos)")
     
     print(f"\n[v0] ========== SCRAPING COMPLETADO ==========")
-    print(f"[v0] Datos guardados en {output_file}")
     print(f"[v0] Status: {data['status']}")
     print(f"[v0] Tendencias encontradas: {data['total_trends']}")
     if data['trends'][:3]:
         print("[v0] Top 3:")
         for t in data['trends'][:3]:
-            print(f"  #{t['rank']}: {t['term']} ({t['tweet_volume']} tweets)")
+            minutes = t.get('minutes_since_creation', 'N/A')
+            trend_time = t.get('trend_time_mexico', {})
+            time_str = f"{trend_time.get('hour', 0):02d}:{trend_time.get('minute', 0):02d}"
+            print(f"  #{t['rank']}: {t['term']} ({t['tweet_volume']} tweets, hace {minutes} min, hora: {time_str})")
