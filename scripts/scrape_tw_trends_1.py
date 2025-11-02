@@ -1,156 +1,153 @@
 import requests
 from bs4 import BeautifulSoup
 import json
-import re
 from datetime import datetime, timedelta
 import pytz
 import random
 import time
-
-def extract_minutes_ago(time_text):
-    """
-    Extrae el número de minutos de strings como '5 minutes ago', '2 hours ago', etc.
-    Retorna None si no es reciente (en minutos) o si es antiguo (horas/días).
-    """
-    if not time_text:
-        return None
-    
-    time_text = time_text.strip().lower()
-    print(f"[v0] Analizando tiempo: '{time_text}'")
-    
-    # Buscar "X minutes ago"
-    match = re.search(r'(\d+)\s+minutes?\s+ago', time_text)
-    if match:
-        minutes = int(match.group(1))
-        print(f"[v0]   ✓ Es reciente: {minutes} minutos")
-        return minutes
-    
-    # Si dice "hour" o "hours", no es reciente (>60 minutos)
-    if 'hour' in time_text:
-        print(f"[v0]   ✗ Es viejo: {time_text}")
-        return None
-    
-    # Si dice "day" o "days", descartarlo
-    if 'day' in time_text:
-        print(f"[v0]   ✗ Es muy viejo: {time_text}")
-        return None
-    
-    # Si dice "just now" o "now", contar como 0 minutos
-    if 'just now' in time_text or 'now' == time_text:
-        print(f"[v0]   ✓ Es ahora mismo: 0 minutos")
-        return 0
-    
-    print(f"[v0]   ? Formato desconocido: {time_text}")
-    return None
+import sys
 
 def extract_minutes_from_datetime(date_string):
     """
     Calcula cuántos minutos hace fue creada una tendencia basado en dateCreated.
-    date_string ejemplo: "2025-11-02T10:30:00Z"
-    Retorna el número de minutos, o None si es antiguo (>20 minutos).
     """
     if not date_string:
         return None
     
     try:
-        # Parsear fecha ISO 8601
         created_time = datetime.fromisoformat(date_string.replace('Z', '+00:00'))
         now = datetime.now(created_time.tzinfo) if created_time.tzinfo else datetime.now()
         
         time_diff = now - created_time
         minutes_ago = int(time_diff.total_seconds() / 60)
         
-        print(f"[v0] Tiempo desde creación: {minutes_ago} minutos")
+        print(f"[v0] Tiempo desde creación: {minutes_ago} minutos", file=sys.stderr)
         return minutes_ago
     except Exception as e:
-        print(f"[v0] Error parseando fecha: {e}")
+        print(f"[v0] Error parseando fecha: {e}", file=sys.stderr)
         return None
 
-def should_update_based_on_freshness(trends_data, max_minutes=20):
+def get_trend_time_from_creation(date_created_str):
     """
-    Verifica si los datos son lo suficientemente recientes para sobreescribir JSON.
-    Solo retorna True si hay al menos una tendencia actualizada hace menos de 20 minutos.
+    Calcula la hora real en México a la que corresponden las tendencias.
     """
-    print(f"\n[v0] Verificando frescura de datos (máximo: {max_minutes} minutos)...")
-    
-    # Si no hay tendencias, no actualizar
-    if not trends_data.get('trends') or len(trends_data['trends']) == 0:
-        print("[v0] ✗ No hay tendencias, no se actualizará el JSON")
-        return False
-    
-    # Buscar al menos una tendencia reciente
-    for trend in trends_data['trends'][:10]:  # Revisar las primeras 10
-        if trend.get('minutes_since_creation') is not None:
-            minutes = trend.get('minutes_since_creation')
-            if minutes < max_minutes:
-                print(f"[v0] ✓ Datos suficientemente frescos ({minutes} < {max_minutes} minutos)")
-                return True
-    
-    print(f"[v0] ✗ Datos no son lo suficientemente frescos (≥ {max_minutes} minutos)")
-    return False
+    try:
+        created_time = datetime.fromisoformat(date_created_str.replace('Z', '+00:00'))
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        created_time_mexico = created_time.astimezone(mexico_tz)
+        
+        return {
+            "timestamp_iso": created_time_mexico.isoformat(),
+            "day": created_time_mexico.day,
+            "month": created_time_mexico.month,
+            "year": created_time_mexico.year,
+            "hour": created_time_mexico.hour,
+            "minute": created_time_mexico.minute
+        }
+    except Exception as e:
+        print(f"[v0] Error parseando fecha: {e}", file=sys.stderr)
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        now = datetime.now(mexico_tz)
+        return {
+            "timestamp_iso": now.isoformat(),
+            "day": now.day,
+            "month": now.month,
+            "year": now.year,
+            "hour": now.hour,
+            "minute": now.minute
+        }
 
 def scrape_twitter_trending_mexico():
     """
     Extrae tendencias de https://www.twitter-trending.com/mexico/en
-    usando JSON-LD incrustado en el HTML (sin depender de JavaScript).
     """
     url = 'https://www.twitter-trending.com/mexico/en'
     
-    print("[v0] ========== INICIANDO SCRAPING TWITTER-TRENDING.COM ==========")
-    print(f"[v0] URL: {url}")
+    print("[v0] ========== INICIANDO SCRAPING TWITTER-TRENDING.COM ==========", file=sys.stderr)
+    print(f"[v0] URL: {url}", file=sys.stderr)
     
-    delay_before_request = random.uniform(1, 4)
-    print(f"[v0] Esperando {delay_before_request:.1f}s antes de solicitar...")
+    # Aumentar delay inicial
+    delay_before_request = random.uniform(2, 5)
+    print(f"[v0] Esperando {delay_before_request:.1f}s antes de solicitar...", file=sys.stderr)
     time.sleep(delay_before_request)
     
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'es-MX,es;q=0.9',
-            'Referer': 'https://www.twitter-trending.com/',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'es-MX,es;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0',
+            'DNT': '1',
+            'Referer': 'https://www.google.com/',
         }
         
-        print("[v0] Realizando solicitud HTTP...")
-        response = requests.get(url, headers=headers, timeout=15)
+        print("[v0] Realizando solicitud HTTP...", file=sys.stderr)
+        
+        # Aumentar timeout a 30 segundos
+        response = requests.get(url, headers=headers, timeout=30, allow_redirects=True)
+        
+        print(f"[v0] Status code: {response.status_code} ✓", file=sys.stderr)
+        print(f"[v0] Tamaño del HTML: {len(response.text)} caracteres", file=sys.stderr)
+        print(f"[v0] Encoding: {response.encoding}", file=sys.stderr)
+        
+        # Verificar si recibimos HTML válido
+        if response.status_code != 200:
+            print(f"[v0] ERROR: Status code {response.status_code}", file=sys.stderr)
+            print(f"[v0] Response headers: {dict(response.headers)}", file=sys.stderr)
+            return generate_example_data()
+        
+        if len(response.text) < 1000:
+            print(f"[v0] ERROR: HTML demasiado corto (posible bloqueo)", file=sys.stderr)
+            print(f"[v0] Primeros 500 chars: {response.text[:500]}", file=sys.stderr)
+            return generate_example_data()
+        
         response.raise_for_status()
         
-        print(f"[v0] Status code: {response.status_code} ✓")
-        print(f"[v0] Tamaño del HTML: {len(response.text)} caracteres")
-        
-        delay_after_response = random.uniform(0.5, 2)
+        delay_after_response = random.uniform(1, 3)
         time.sleep(delay_after_response)
         
-        print("[v0] Parseando HTML con BeautifulSoup...")
+        print("[v0] Parseando HTML con BeautifulSoup...", file=sys.stderr)
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        print("[v0] Buscando JSON-LD schema.org...")
+        print("[v0] Buscando JSON-LD schema.org...", file=sys.stderr)
         json_ld_script = soup.find('script', {'type': 'application/ld+json'})
         
         if not json_ld_script:
-            print("[v0] ERROR: No se encontró JSON-LD")
+            print("[v0] ERROR: No se encontró JSON-LD", file=sys.stderr)
+            print(f"[v0] Scripts encontrados: {len(soup.find_all('script'))}", file=sys.stderr)
+            
+            # Guardar HTML para debug
+            with open('/tmp/debug_html.html', 'w', encoding='utf-8') as f:
+                f.write(response.text[:5000])
+            print("[v0] HTML guardado en /tmp/debug_html.html para debug", file=sys.stderr)
+            
             return generate_example_data()
         
-        print("[v0] ✓ JSON-LD encontrado")
+        print("[v0] ✓ JSON-LD encontrado", file=sys.stderr)
         
-        delay_before_parse = random.uniform(0.2, 1)
+        delay_before_parse = random.uniform(0.5, 2)
         time.sleep(delay_before_parse)
         
         try:
             schema_data = json.loads(json_ld_script.string)
+            print(f"[v0] JSON-LD parseado exitosamente. Tipo: {schema_data.get('@type')}", file=sys.stderr)
         except json.JSONDecodeError as e:
-            print(f"[v0] ERROR parseando JSON: {e}")
+            print(f"[v0] ERROR parseando JSON: {e}", file=sys.stderr)
             return generate_example_data()
         
         if schema_data.get('@type') != 'ItemList':
-            print(f"[v0] ERROR: No es ItemList, es {schema_data.get('@type')}")
+            print(f"[v0] ERROR: No es ItemList, es {schema_data.get('@type')}", file=sys.stderr)
             return generate_example_data()
         
         items = schema_data.get('itemListElement', [])
-        print(f"[v0] Total de tendencias en JSON-LD: {len(items)}")
+        print(f"[v0] Total de tendencias en JSON-LD: {len(items)}", file=sys.stderr)
         
-        if not items:
-            print("[v0] ERROR: No hay itemListElement")
+        if not items or len(items) == 0:
+            print("[v0] ERROR: No hay itemListElement o está vacío", file=sys.stderr)
+            print(f"[v0] Keys en schema_data: {list(schema_data.keys())}", file=sys.stderr)
             return generate_example_data()
         
         trends_list = []
@@ -170,11 +167,12 @@ def scrape_twitter_trending_mexico():
             date_created = item.get('dateCreated', '')
             
             if not name:
-                print(f"[v0] ⚠ Item {position} sin nombre, saltando")
+                print(f"[v0] ⚠ Item {position} sin nombre, saltando", file=sys.stderr)
                 continue
             
+            # Convertir volumen exacto de 1000 a -1
             if tweet_count == 1000:
-                print(f"[v0] Volumen exacto 1000 detectado, cambiando a -1")
+                print(f"[v0] Volumen exacto 1000 detectado para '{name}', cambiando a -1", file=sys.stderr)
                 tweet_count = -1
             
             minutes_since_creation = extract_minutes_from_datetime(date_created)
@@ -198,9 +196,15 @@ def scrape_twitter_trending_mexico():
             }
             
             trends_list.append(trend_data)
-            print(f"[v0] #{position}: {name} ({tweet_count} tweets)")
+            
+            if idx < 5:  # Solo loggear primeras 5
+                print(f"[v0] #{position}: {name} ({tweet_count} tweets)", file=sys.stderr)
         
-        print(f"\n[v0] ✓ {len(trends_list)} tendencias extraídas correctamente")
+        print(f"\n[v0] ✓ {len(trends_list)} tendencias extraídas correctamente", file=sys.stderr)
+        
+        if len(trends_list) == 0:
+            print("[v0] ERROR: No se extrajo ninguna tendencia válida", file=sys.stderr)
+            return generate_example_data()
         
         first_trend_minutes = trends_list[0]['minutes_since_creation'] if trends_list and trends_list[0].get('minutes_since_creation') is not None else None
         
@@ -230,26 +234,28 @@ def scrape_twitter_trending_mexico():
             "status": "success"
         }
         
+        print(f"[v0] ✓✓✓ SCRAPING EXITOSO - {len(trends_list)} tendencias", file=sys.stderr)
         return result
     
     except requests.exceptions.Timeout:
-        print("[v0] ERROR: Timeout - La solicitud tardó demasiado (>15s)")
+        print("[v0] ERROR: Timeout - La solicitud tardó más de 30s", file=sys.stderr)
         return generate_example_data()
     
     except requests.exceptions.ConnectionError as e:
-        print(f"[v0] ERROR: Conexión rechazada - {str(e)[:100]}")
+        print(f"[v0] ERROR: Conexión rechazada - {str(e)[:200]}", file=sys.stderr)
         return generate_example_data()
     
     except Exception as e:
-        print(f"[v0] ERROR GENERAL: {type(e).__name__}: {str(e)[:100]}")
+        print(f"[v0] ERROR GENERAL: {type(e).__name__}: {str(e)[:200]}", file=sys.stderr)
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         return generate_example_data()
 
 def generate_example_data():
     """
-    Genera datos de ejemplo realistas de tendencias mexicanas
-    para usar cuando falla el scraping.
+    Genera datos de ejemplo cuando falla el scraping.
     """
-    print("[v0] Usando datos de ejemplo como fallback...")
+    print("[v0] ⚠⚠⚠ Usando datos de ejemplo como fallback...", file=sys.stderr)
     
     mexico_tz = pytz.timezone('America/Mexico_City')
     now = datetime.now(mexico_tz)
@@ -317,58 +323,20 @@ def generate_example_data():
         "status": "example_data"
     }
 
-def get_trend_time_from_creation(date_created_str):
-    """
-    Calcula la hora real en México a la que corresponden las tendencias
-    basado en el dateCreated del JSON-LD.
-    Retorna formato estructurado: {day, month, year, hour, minute, timestamp_iso}
-    """
-    try:
-        # Parsear fecha ISO 8601
-        created_time = datetime.fromisoformat(date_created_str.replace('Z', '+00:00'))
-        
-        # Convertir a zona horaria de México
-        mexico_tz = pytz.timezone('America/Mexico_City')
-        created_time_mexico = created_time.astimezone(mexico_tz)
-        
-        return {
-            "timestamp_iso": created_time_mexico.isoformat(),
-            "day": created_time_mexico.day,
-            "month": created_time_mexico.month,
-            "year": created_time_mexico.year,
-            "hour": created_time_mexico.hour,
-            "minute": created_time_mexico.minute
-        }
-    except Exception as e:
-        print(f"[v0] Error parseando fecha: {e}")
-        # Retornar hora actual si hay error
-        mexico_tz = pytz.timezone('America/Mexico_City')
-        now = datetime.now(mexico_tz)
-        return {
-            "timestamp_iso": now.isoformat(),
-            "day": now.day,
-            "month": now.month,
-            "year": now.year,
-            "hour": now.hour,
-            "minute": now.minute
-        }
-
 if __name__ == "__main__":
-    print("[v0] Iniciando scraper de twitter-trending.com...\n")
+    print("[v0] Iniciando scraper de twitter-trending.com...\n", file=sys.stderr)
     data = scrape_twitter_trending_mexico()
     
     output_file = 'twitter_trending_com_data.json'
     with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"\n[v0] ✓ Datos guardados en {output_file}")
+    print(f"\n[v0] ✓ Datos guardados en {output_file}", file=sys.stderr)
     
-    print(f"\n[v0] ========== SCRAPING COMPLETADO ==========")
-    print(f"[v0] Status: {data['status']}")
-    print(f"[v0] Tendencias encontradas: {data['total_trends']}")
+    print(f"\n[v0] ========== SCRAPING COMPLETADO ==========", file=sys.stderr)
+    print(f"[v0] Status: {data['status']}", file=sys.stderr)
+    print(f"[v0] Tendencias encontradas: {data['total_trends']}", file=sys.stderr)
     if data['trends'][:3]:
-        print("[v0] Top 3:")
+        print("[v0] Top 3:", file=sys.stderr)
         for t in data['trends'][:3]:
             minutes = t.get('minutes_since_creation', 'N/A')
-            trend_time = t.get('trend_time_mexico', {})
-            time_str = f"{trend_time.get('hour', 0):02d}:{trend_time.get('minute', 0):02d}"
-            print(f"  #{t['rank']}: {t['term']} ({t['tweet_volume']} tweets, antigüedad: {minutes} min, hora: {time_str})")
+            print(f"  #{t['rank']}: {t['term']} ({t['tweet_volume']} tweets, {minutes} min)", file=sys.stderr)
