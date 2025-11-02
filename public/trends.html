@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tendencias de Google - México 🔥</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #777;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .trends-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .trend-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .trend-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 107, 107, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .trend-rank {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            min-width: 60px;
+        }
+
+        .trend-info {
+            flex: 1;
+        }
+
+        .trend-term {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        .trend-volume {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #aaa;
+            font-size: 0.95rem;
+        }
+
+        .volume-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b 0%, #ffa500 100%);
+            border-radius: 3px;
+        }
+
+        .trend-badge {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff6b6b;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #aaa;
+        }
+
+        .error {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: #ff6b6b;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #ff6b6b;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .trend-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .trend-rank {
+                font-size: 2rem;
+            }
+
+            .volume-bar {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Tendencias en México</h1>
+            <p>Las búsquedas más populares en Google Trends</p>
+        </div>
+
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 20px;">Cargando tendencias...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo (en producción, estos vendrían del script Python)
+        const SAMPLE_DATA = {
+            "timestamp": new Date().toISOString(),
+            "country": "México",
+            "geo_code": "MX",
+            "timeframe": "Últimas 24 horas",
+            "total_trends": 20,
+            "trends": [
+                { "rank": 1, "term": "Argentina vs Uruguay", "volume": 100 },
+                { "rank": 2, "term": "Final UEFA Champions League", "volume": 95 },
+                { "rank": 3, "term": "Elecciones 2025", "volume": 88 },
+                { "rank": 4, "term": "Pronóstico del tiempo hoy", "volume": 82 },
+                { "rank": 5, "term": "Dólar México", "volume": 78 },
+                { "rank": 6, "term": "Noticias de hoy", "volume": 75 },
+                { "rank": 7, "term": "Nuevo iPhone 16", "volume": 72 },
+                { "rank": 8, "term": "Renta básica universal", "volume": 68 },
+                { "rank": 9, "term": "Recetas de cocina", "volume": 65 },
+                { "rank": 10, "term": "Ver películas en línea", "volume": 62 }
+            ]
+        };
+
+        async function loadTrends() {
+            try {
+                // Intentar cargar desde el archivo JSON generado
+                const response = await fetch('/trends_data.json');
+                
+                if (!response.ok) {
+                    console.log("[v0] Usando datos de ejemplo");
+                    renderTrends(SAMPLE_DATA);
+                    return;
+                }
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                renderTrends(data);
+            } catch (error) {
+                console.error("[v0] Error:", error);
+                renderError(error.message);
+            }
+        }
+
+        function renderTrends(data) {
+            const content = document.getElementById('content');
+            const timestamp = new Date(data.timestamp).toLocaleString('es-MX');
+
+            let html = `
+                <div class="timestamp">
+                    Actualizado: ${timestamp}
+                </div>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number">${data.total_trends}</div>
+                        <div class="stat-label">Tendencias totales</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">📍 ${data.country}</div>
+                    </div>
+                </div>
+
+                <div class="trends-grid">
+            `;
+
+            data.trends.forEach(trend => {
+                const percentage = trend.volume || 100;
+                html += `
+                    <div class="trend-card" onclick="openTrend('${trend.term}')">
+                        <div class="trend-rank">#${trend.rank}</div>
+                        <div class="trend-info">
+                            <div class="trend-term">${trend.term}</div>
+                            <div class="trend-volume">
+                                <div class="volume-bar">
+                                    <div class="volume-fill" style="width: ${percentage}%"></div>
+                                </div>
+                                <span>${percentage}%</span>
+                            </div>
+                        </div>
+                        <div class="trend-badge">🔍</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function renderError(message) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="error">
+                    <strong>Error al cargar las tendencias:</strong><br>
+                    ${message}
+                </div>
+                <div style="text-align: center;">
+                    <button onclick="loadTrends()" style="
+                        background: #ff6b6b;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 1rem;
+                    ">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
+
+        function openTrend(term) {
+            // Abrir búsqueda en Google Trends
+            window.open(`https://trends.google.com/trends/explore?geo=MX&q=${encodeURIComponent(term)}`, '_blank');
+        }
+
+        // Cargar tendencias al iniciar
+        window.addEventListener('load', loadTrends);
+
+        // Recargar cada 30 minutos
+        setInterval(loadTrends, 30 * 60 * 1000);
+    </script>
+</body>
+</html>
