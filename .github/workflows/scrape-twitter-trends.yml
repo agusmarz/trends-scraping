@@ -25,34 +25,34 @@ jobs:
       - name: Run twitter-trending.com scraper
         run: |
           python - <<'PY'
-import json
-import sys
-from pathlib import Path
-
-sys.path.append('scripts')
-from scrape_tw_trends_1 import scrape_twitter_trending_mexico
-
-data = scrape_twitter_trending_mexico()
-output = Path('twitter_trending_com_data.json')
-output.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-print(f"Saved data to {output}")
-PY
+          import json
+          import sys
+          from pathlib import Path
+          
+          sys.path.append('scripts')
+          from scrape_tw_trends_1 import scrape_twitter_trending_mexico
+          
+          data = scrape_twitter_trending_mexico()
+          output = Path('twitter_trending_com_data.json')
+          output.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(f"Saved data to {output}")
+          PY
 
       - name: Run xtrends scraper
         run: |
           python - <<'PY'
-import json
-import sys
-from pathlib import Path
-
-sys.path.append('scripts')
-from scrape_tw_trends_2 import scrape_twitter_trends_mexico
-
-data = scrape_twitter_trends_mexico()
-output = Path('twitter_trends_data.json')
-output.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-print(f"Saved data to {output}")
-PY
+          import json
+          import sys
+          from pathlib import Path
+          
+          sys.path.append('scripts')
+          from scrape_tw_trends_2 import scrape_twitter_trends_mexico
+          
+          data = scrape_twitter_trends_mexico()
+          output = Path('twitter_trends_data.json')
+          output.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
+          print(f"Saved data to {output}")
+          PY
 
       - name: Prepare timestamp
         run: echo "CURRENT_TIMESTAMP=$(date +'%H%M_%d%m%Y')" >> $GITHUB_ENV
