@@ -1,11 +1,47 @@
-import requests
-from bs4 import BeautifulSoup
+import asyncio
+from playwright.async_api import async_playwright
 import json
+import re
 from datetime import datetime, timedelta
 import pytz
 import random
-import time
 import sys
+
+def extract_minutes_ago(time_text):
+    """
+    Extrae el número de minutos de strings como '5 minutes ago', '2 hours ago', etc.
+    Retorna None si no es reciente (en minutos) o si es antiguo (horas/días).
+    """
+    if not time_text:
+        return None
+    
+    time_text = time_text.strip().lower()
+    print(f"[v0] Analizando tiempo: '{time_text}'", file=sys.stderr)
+    
+    # Buscar "X minutes ago"
+    match = re.search(r'(\d+)\s+minutes?\s+ago', time_text)
+    if match:
+        minutes = int(match.group(1))
+        print(f"[v0]   ✓ Es reciente: {minutes} minutos", file=sys.stderr)
+        return minutes
+    
+    # Si dice "hour" o "hours", no es reciente (>60 minutos)
+    if 'hour' in time_text:
+        print(f"[v0]   ✗ Es viejo: {time_text}", file=sys.stderr)
+        return None
+    
+    # Si dice "day" o "days", descartarlo
+    if 'day' in time_text:
+        print(f"[v0]   ✗ Es muy viejo: {time_text}", file=sys.stderr)
+        return None
+    
+    # Si dice "just now" o "now", contar como 0 minutos
+    if 'just now' in time_text or 'now' == time_text:
+        print(f"[v0]   ✓ Es ahora mismo: 0 minutos", file=sys.stderr)
+        return 0
+    
+    print(f"[v0]   ? Formato desconocido: {time_text}", file=sys.stderr)
+    return None
 
 def extract_minutes_from_datetime(date_string):
     """
@@ -57,199 +93,245 @@ def get_trend_time_from_creation(date_created_str):
             "minute": now.minute
         }
 
-def scrape_twitter_trending_mexico():
+async def scrape_twitter_trending_mexico():
     """
     Extrae tendencias de https://www.twitter-trending.com/mexico/en
+    Usa Playwright para bypassear protección Cloudflare.
     """
     url = 'https://www.twitter-trending.com/mexico/en'
     
     print("[v0] ========== INICIANDO SCRAPING TWITTER-TRENDING.COM ==========", file=sys.stderr)
     print(f"[v0] URL: {url}", file=sys.stderr)
     
-    # Aumentar delay inicial
-    delay_before_request = random.uniform(2, 5)
-    print(f"[v0] Esperando {delay_before_request:.1f}s antes de solicitar...", file=sys.stderr)
-    time.sleep(delay_before_request)
-    
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'es-MX,es;q=0.9,en;q=0.8',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'Cache-Control': 'max-age=0',
-            'DNT': '1',
-            'Referer': 'https://www.google.com/',
-        }
-        
-        print("[v0] Realizando solicitud HTTP...", file=sys.stderr)
-        
-        # Aumentar timeout a 30 segundos
-        response = requests.get(url, headers=headers, timeout=30, allow_redirects=True)
-        
-        print(f"[v0] Status code: {response.status_code} ✓", file=sys.stderr)
-        print(f"[v0] Tamaño del HTML: {len(response.text)} caracteres", file=sys.stderr)
-        print(f"[v0] Encoding: {response.encoding}", file=sys.stderr)
-        
-        # Verificar si recibimos HTML válido
-        if response.status_code != 200:
-            print(f"[v0] ERROR: Status code {response.status_code}", file=sys.stderr)
-            print(f"[v0] Response headers: {dict(response.headers)}", file=sys.stderr)
-            return generate_example_data()
-        
-        if len(response.text) < 1000:
-            print(f"[v0] ERROR: HTML demasiado corto (posible bloqueo)", file=sys.stderr)
-            print(f"[v0] Primeros 500 chars: {response.text[:500]}", file=sys.stderr)
-            return generate_example_data()
-        
-        response.raise_for_status()
-        
-        delay_after_response = random.uniform(1, 3)
-        time.sleep(delay_after_response)
-        
-        print("[v0] Parseando HTML con BeautifulSoup...", file=sys.stderr)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        
-        print("[v0] Buscando JSON-LD schema.org...", file=sys.stderr)
-        json_ld_script = soup.find('script', {'type': 'application/ld+json'})
-        
-        if not json_ld_script:
-            print("[v0] ERROR: No se encontró JSON-LD", file=sys.stderr)
-            print(f"[v0] Scripts encontrados: {len(soup.find_all('script'))}", file=sys.stderr)
-            
-            # Guardar HTML para debug
-            with open('/tmp/debug_html.html', 'w', encoding='utf-8') as f:
-                f.write(response.text[:5000])
-            print("[v0] HTML guardado en /tmp/debug_html.html para debug", file=sys.stderr)
-            
-            return generate_example_data()
-        
-        print("[v0] ✓ JSON-LD encontrado", file=sys.stderr)
-        
-        delay_before_parse = random.uniform(0.5, 2)
-        time.sleep(delay_before_parse)
-        
+    async with async_playwright() as p:
         try:
-            schema_data = json.loads(json_ld_script.string)
-            print(f"[v0] JSON-LD parseado exitosamente. Tipo: {schema_data.get('@type')}", file=sys.stderr)
-        except json.JSONDecodeError as e:
-            print(f"[v0] ERROR parseando JSON: {e}", file=sys.stderr)
-            return generate_example_data()
-        
-        if schema_data.get('@type') != 'ItemList':
-            print(f"[v0] ERROR: No es ItemList, es {schema_data.get('@type')}", file=sys.stderr)
-            return generate_example_data()
-        
-        items = schema_data.get('itemListElement', [])
-        print(f"[v0] Total de tendencias en JSON-LD: {len(items)}", file=sys.stderr)
-        
-        if not items or len(items) == 0:
-            print("[v0] ERROR: No hay itemListElement o está vacío", file=sys.stderr)
-            print(f"[v0] Keys en schema_data: {list(schema_data.keys())}", file=sys.stderr)
-            return generate_example_data()
-        
-        trends_list = []
-        
-        for idx, item in enumerate(items[:40]):
-            if idx % 10 == 0 and idx > 0:
-                delay_between_items = random.uniform(0.1, 0.3)
-                time.sleep(delay_between_items)
+            print("[v0] Lanzando navegador Chromium...", file=sys.stderr)
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-dev-shm-usage',
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox'
+                ]
+            )
             
-            if item.get('@type') != 'ListItem':
-                continue
+            context = await browser.new_context(
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                viewport={'width': 1920, 'height': 1080},
+                locale='es-MX',
+                timezone_id='America/Mexico_City'
+            )
+            
+            # Inyectar scripts para evadir detección
+            await context.add_init_script("""
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                window.chrome = {runtime: {}};
+            """)
+            
+            page = await context.new_page()
+            
+            print("[v0] Navegando a twitter-trending.com...", file=sys.stderr)
+            
+            delay_before_nav = random.uniform(2, 4)
+            await asyncio.sleep(delay_before_nav)
+            
+            response = await page.goto(url, wait_until='domcontentloaded', timeout=40000)
+            
+            print(f"[v0] Status code: {response.status}", file=sys.stderr)
+            
+            if response.status == 403:
+                print("[v0] ⚠ Status 403 - Esperando a que Cloudflare resuelva...", file=sys.stderr)
+                await asyncio.sleep(5)
+            
+            # Esperar a que JavaScript renderice
+            print("[v0] Esperando a que la página cargue completamente...", file=sys.stderr)
+            await asyncio.sleep(random.uniform(3, 6))
+            
+            # Verificar si hay JSON-LD
+            print("[v0] Buscando JSON-LD...", file=sys.stderr)
+            html = await page.content()
+            
+            if len(html) < 2000:
+                print(f"[v0] ERROR: HTML demasiado corto ({len(html)} chars)", file=sys.stderr)
+                await browser.close()
+                return generate_example_data()
+            
+            print(f"[v0] HTML recibido: {len(html)} caracteres", file=sys.stderr)
+            
+            # Extraer JSON-LD usando JavaScript
+            json_ld_data = await page.evaluate("""
+                () => {
+                    const script = document.querySelector('script[type="application/ld+json"]');
+                    if (!script) return null;
+                    try {
+                        return JSON.parse(script.textContent);
+                    } catch (e) {
+                        return null;
+                    }
+                }
+            """)
+            
+            if not json_ld_data:
+                print("[v0] ERROR: No se encontró JSON-LD", file=sys.stderr)
                 
-            position = item.get('position', idx + 1)
-            name = item.get('name', '').strip()
-            tweet_count = item.get('Tweet Count', 0)
-            url_trend = item.get('url', '')
-            date_created = item.get('dateCreated', '')
+                # Guardar HTML para debug
+                with open('/tmp/debug_html.html', 'w', encoding='utf-8') as f:
+                    f.write(html[:5000])
+                print("[v0] HTML guardado en /tmp/debug_html.html", file=sys.stderr)
+                
+                await browser.close()
+                return generate_example_data()
             
-            if not name:
-                print(f"[v0] ⚠ Item {position} sin nombre, saltando", file=sys.stderr)
-                continue
+            print(f"[v0] ✓ JSON-LD encontrado. Tipo: {json_ld_data.get('@type')}", file=sys.stderr)
             
-            # Convertir volumen exacto de 1000 a -1
-            if tweet_count == 1000:
-                print(f"[v0] Volumen exacto 1000 detectado para '{name}', cambiando a -1", file=sys.stderr)
-                tweet_count = -1
+            if json_ld_data.get('@type') != 'ItemList':
+                print(f"[v0] ERROR: Tipo incorrecto: {json_ld_data.get('@type')}", file=sys.stderr)
+                await browser.close()
+                return generate_example_data()
             
-            minutes_since_creation = extract_minutes_from_datetime(date_created)
+            items = json_ld_data.get('itemListElement', [])
+            print(f"[v0] Total de tendencias en JSON-LD: {len(items)}", file=sys.stderr)
             
-            trend_time = get_trend_time_from_creation(date_created) if date_created else {
-                "timestamp_iso": datetime.now(pytz.timezone('America/Mexico_City')).isoformat(),
-                "day": datetime.now(pytz.timezone('America/Mexico_City')).day,
-                "month": datetime.now(pytz.timezone('America/Mexico_City')).month,
-                "year": datetime.now(pytz.timezone('America/Mexico_City')).year,
-                "hour": datetime.now(pytz.timezone('America/Mexico_City')).hour,
-                "minute": datetime.now(pytz.timezone('America/Mexico_City')).minute,
+            if not items:
+                print("[v0] ERROR: itemListElement vacío", file=sys.stderr)
+                await browser.close()
+                return generate_example_data()
+            
+            # Ahora extraer información de tiempos desde el HTML visible
+            print("[v0] Extrayendo información de tiempos...", file=sys.stderr)
+            time_info = await page.evaluate("""
+                () => {
+                    const timeElements = Array.from(document.querySelectorAll('*'))
+                        .filter(el => {
+                            const text = el.textContent || '';
+                            return text.includes('ago') || text.includes('minutes') || text.includes('hours');
+                        })
+                        .map(el => el.textContent.trim())
+                        .filter(text => text.length < 50);
+                    return timeElements;
+                }
+            """)
+            
+            print(f"[v0] Elementos de tiempo encontrados: {len(time_info)}", file=sys.stderr)
+            if time_info:
+                print(f"[v0] Ejemplos: {time_info[:3]}", file=sys.stderr)
+            
+            # Procesar tendencias
+            trends_list = []
+            scraping_time_mexico = datetime.now(pytz.timezone('America/Mexico_City'))
+            oldest_trend_minutes = None
+            
+            for idx, item in enumerate(items[:40]):
+                if item.get('@type') != 'ListItem':
+                    continue
+                    
+                position = item.get('position', idx + 1)
+                name = item.get('name', '').strip()
+                tweet_count = item.get('Tweet Count', 0)
+                url_trend = item.get('url', '')
+                date_created = item.get('dateCreated', '')
+                
+                if not name:
+                    continue
+                
+                # Convertir volumen exacto de 1000 a -1
+                if tweet_count == 1000:
+                    tweet_count = -1
+                
+                # Calcular minutos desde creación
+                minutes_since_creation = extract_minutes_from_datetime(date_created)
+                
+                # También intentar extraer de time_info si disponible
+                if idx < len(time_info):
+                    minutes_from_html = extract_minutes_ago(time_info[idx])
+                    if minutes_from_html is not None:
+                        minutes_since_creation = minutes_from_html
+                
+                # Guardar el mayor número de minutos (tendencia más antigua)
+                if minutes_since_creation is not None:
+                    if oldest_trend_minutes is None or minutes_since_creation > oldest_trend_minutes:
+                        oldest_trend_minutes = minutes_since_creation
+                
+                trend_time = get_trend_time_from_creation(date_created) if date_created else {
+                    "timestamp_iso": scraping_time_mexico.isoformat(),
+                    "day": scraping_time_mexico.day,
+                    "month": scraping_time_mexico.month,
+                    "year": scraping_time_mexico.year,
+                    "hour": scraping_time_mexico.hour,
+                    "minute": scraping_time_mexico.minute,
+                }
+                
+                trend_data = {
+                    "rank": position,
+                    "term": name,
+                    "tweet_volume": tweet_count,
+                    "minutes_since_creation": minutes_since_creation,
+                    "trend_time_mexico": trend_time,
+                    "url": url_trend
+                }
+                
+                trends_list.append(trend_data)
+                
+                if idx < 5:
+                    print(f"[v0] #{position}: {name} ({tweet_count} tweets, {minutes_since_creation} min)", file=sys.stderr)
+            
+            await browser.close()
+            
+            print(f"\n[v0] ✓ {len(trends_list)} tendencias extraídas correctamente", file=sys.stderr)
+            
+            if len(trends_list) == 0:
+                print("[v0] ERROR: No se extrajo ninguna tendencia", file=sys.stderr)
+                return generate_example_data()
+            
+            # Calcular cuándo se actualizaron los datos por última vez
+            first_trend_minutes = trends_list[0]['minutes_since_creation'] if trends_list and trends_list[0].get('minutes_since_creation') is not None else None
+            
+            if first_trend_minutes is not None:
+                data_updated_time = scraping_time_mexico - timedelta(minutes=first_trend_minutes)
+            else:
+                data_updated_time = scraping_time_mexico
+            
+            result = {
+                "scraping_time": {
+                    "timestamp_iso": scraping_time_mexico.isoformat(),
+                    "day": scraping_time_mexico.day,
+                    "month": scraping_time_mexico.month,
+                    "year": scraping_time_mexico.year,
+                    "hour": scraping_time_mexico.hour,
+                    "minute": scraping_time_mexico.minute,
+                    "description": "Hora en la que se ejecutó el scraping"
+                },
+                "data_source_updated_time": {
+                    "timestamp_iso": data_updated_time.isoformat(),
+                    "day": data_updated_time.day,
+                    "month": data_updated_time.month,
+                    "year": data_updated_time.year,
+                    "hour": data_updated_time.hour,
+                    "minute": data_updated_time.minute,
+                    "minutes_ago": first_trend_minutes,
+                    "description": "Hora en la que la fuente actualizó los datos por última vez"
+                },
+                "country": "México",
+                "platform": "Twitter/X",
+                "source": "twitter-trending.com",
+                "total_trends": len(trends_list),
+                "trends": trends_list,
+                "status": "success"
             }
             
-            trend_data = {
-                "rank": position,
-                "term": name,
-                "tweet_volume": tweet_count,
-                "minutes_since_creation": minutes_since_creation,
-                "trend_time_mexico": trend_time,
-                "url": url_trend
-            }
+            print(f"[v0] ✓✓✓ SCRAPING EXITOSO", file=sys.stderr)
+            print(f"[v0] Scraping realizado: {scraping_time_mexico.strftime('%H:%M:%S')}", file=sys.stderr)
+            print(f"[v0] Datos actualizados: {data_updated_time.strftime('%H:%M:%S')} ({first_trend_minutes} min atrás)", file=sys.stderr)
+            return result
             
-            trends_list.append(trend_data)
-            
-            if idx < 5:  # Solo loggear primeras 5
-                print(f"[v0] #{position}: {name} ({tweet_count} tweets)", file=sys.stderr)
-        
-        print(f"\n[v0] ✓ {len(trends_list)} tendencias extraídas correctamente", file=sys.stderr)
-        
-        if len(trends_list) == 0:
-            print("[v0] ERROR: No se extrajo ninguna tendencia válida", file=sys.stderr)
+        except Exception as e:
+            print(f"[v0] ERROR GENERAL: {type(e).__name__}: {str(e)[:200]}", file=sys.stderr)
+            import traceback
+            traceback.print_exc(file=sys.stderr)
+            if 'browser' in locals():
+                await browser.close()
             return generate_example_data()
-        
-        first_trend_minutes = trends_list[0]['minutes_since_creation'] if trends_list and trends_list[0].get('minutes_since_creation') is not None else None
-        
-        mexico_tz = pytz.timezone('America/Mexico_City')
-        mexico_time_now = datetime.now(mexico_tz)
-        
-        if first_trend_minutes is not None:
-            mexico_time_data = (mexico_time_now - timedelta(minutes=first_trend_minutes))
-        else:
-            mexico_time_data = mexico_time_now
-        
-        result = {
-            "timestamp": datetime.now().isoformat(),
-            "timestamp_mexico": {
-                "timestamp_iso": mexico_time_data.isoformat(),
-                "day": mexico_time_data.day,
-                "month": mexico_time_data.month,
-                "year": mexico_time_data.year,
-                "hour": mexico_time_data.hour,
-                "minute": mexico_time_data.minute
-            },
-            "country": "México",
-            "platform": "Twitter/X",
-            "source": "twitter-trending.com",
-            "total_trends": len(trends_list),
-            "trends": trends_list,
-            "status": "success"
-        }
-        
-        print(f"[v0] ✓✓✓ SCRAPING EXITOSO - {len(trends_list)} tendencias", file=sys.stderr)
-        return result
-    
-    except requests.exceptions.Timeout:
-        print("[v0] ERROR: Timeout - La solicitud tardó más de 30s", file=sys.stderr)
-        return generate_example_data()
-    
-    except requests.exceptions.ConnectionError as e:
-        print(f"[v0] ERROR: Conexión rechazada - {str(e)[:200]}", file=sys.stderr)
-        return generate_example_data()
-    
-    except Exception as e:
-        print(f"[v0] ERROR GENERAL: {type(e).__name__}: {str(e)[:200]}", file=sys.stderr)
-        import traceback
-        traceback.print_exc(file=sys.stderr)
-        return generate_example_data()
 
 def generate_example_data():
     """
@@ -259,6 +341,7 @@ def generate_example_data():
     
     mexico_tz = pytz.timezone('America/Mexico_City')
     now = datetime.now(mexico_tz)
+    data_time = now - timedelta(minutes=5)
     
     example_trends = [
         {
@@ -306,14 +389,24 @@ def generate_example_data():
     ]
     
     return {
-        "timestamp": datetime.now().isoformat(),
-        "timestamp_mexico": {
+        "scraping_time": {
             "timestamp_iso": now.isoformat(),
             "day": now.day,
             "month": now.month,
             "year": now.year,
             "hour": now.hour,
-            "minute": now.minute
+            "minute": now.minute,
+            "description": "Hora en la que se ejecutó el scraping"
+        },
+        "data_source_updated_time": {
+            "timestamp_iso": data_time.isoformat(),
+            "day": data_time.day,
+            "month": data_time.month,
+            "year": data_time.year,
+            "hour": data_time.hour,
+            "minute": data_time.minute,
+            "minutes_ago": 5,
+            "description": "Hora en la que la fuente actualizó los datos por última vez (estimado)"
         },
         "country": "México",
         "platform": "Twitter/X",
@@ -325,7 +418,7 @@ def generate_example_data():
 
 if __name__ == "__main__":
     print("[v0] Iniciando scraper de twitter-trending.com...\n", file=sys.stderr)
-    data = scrape_twitter_trending_mexico()
+    data = asyncio.run(scrape_twitter_trending_mexico())
     
     output_file = 'twitter_trending_com_data.json'
     with open(output_file, 'w', encoding='utf-8') as f:

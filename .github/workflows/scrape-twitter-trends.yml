@@ -70,14 +70,3 @@ jobs:
           name: twitter-xtrends-${{ env.CURRENT_TIMESTAMP }}
           path: twitter_trends_data.json
           if-no-files-found: error
-      - name: Debug run twitter-trending scraper
-        run: |
-          python scripts/scrape_tw_trends_1.py 2>&1 | tee scraper_log.txt
-          cat scraper_log.txt
-
-      - name: Upload debug log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scraper-debug-log
-          path: scraper_log.txt

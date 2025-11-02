@@ -154,14 +154,33 @@ def scrape_twitter_trends_mexico():
         
         if not trends_table:
             print("[v0] ERROR: Tabla no encontrada")
+            mexico_tz = pytz.timezone('America/Mexico_City')
+            scraping_time = datetime.now(mexico_tz)
             return {
-                "timestamp": datetime.now().isoformat(),
-                "timestamp_mexico": get_trend_time_in_mexico(),
+                "scraping_time": {
+                    "timestamp_iso": scraping_time.isoformat(),
+                    "day": scraping_time.day,
+                    "month": scraping_time.month,
+                    "year": scraping_time.year,
+                    "hour": scraping_time.hour,
+                    "minute": scraping_time.minute,
+                    "description": "Hora en la que se ejecutó el scraping"
+                },
+                "data_source_updated_time": {
+                    "timestamp_iso": scraping_time.isoformat(),
+                    "day": scraping_time.day,
+                    "month": scraping_time.month,
+                    "year": scraping_time.year,
+                    "hour": scraping_time.hour,
+                    "minute": scraping_time.minute,
+                    "minutes_ago": 0,
+                    "description": "Hora en la que la fuente actualizó los datos por última vez"
+                },
                 "country": "México",
                 "platform": "Twitter/X",
                 "total_trends": 0,
                 "trends": [],
-                "source": "Twitter Trends Scraper",
+                "source": "xtrends.iamrohit.in",
                 "status": "error",
                 "error": "Tabla de tendencias no encontrada"
             }
@@ -171,14 +190,33 @@ def scrape_twitter_trends_mexico():
         tbody = trends_table.find('tbody', {'id': 'copyData'})
         if not tbody:
             print("[v0] ERROR: tbody no encontrado")
+            mexico_tz = pytz.timezone('America/Mexico_City')
+            scraping_time = datetime.now(mexico_tz)
             return {
-                "timestamp": datetime.now().isoformat(),
-                "timestamp_mexico": get_trend_time_in_mexico(),
+                "scraping_time": {
+                    "timestamp_iso": scraping_time.isoformat(),
+                    "day": scraping_time.day,
+                    "month": scraping_time.month,
+                    "year": scraping_time.year,
+                    "hour": scraping_time.hour,
+                    "minute": scraping_time.minute,
+                    "description": "Hora en la que se ejecutó el scraping"
+                },
+                "data_source_updated_time": {
+                    "timestamp_iso": scraping_time.isoformat(),
+                    "day": scraping_time.day,
+                    "month": scraping_time.month,
+                    "year": scraping_time.year,
+                    "hour": scraping_time.hour,
+                    "minute": scraping_time.minute,
+                    "minutes_ago": 0,
+                    "description": "Hora en la que la fuente actualizó los datos por última vez"
+                },
                 "country": "México",
                 "platform": "Twitter/X",
                 "total_trends": 0,
                 "trends": [],
-                "source": "Twitter Trends Scraper",
+                "source": "xtrends.iamrohit.in",
                 "status": "error",
                 "error": "tbody no encontrado"
             }
@@ -257,13 +295,39 @@ def scrape_twitter_trends_mexico():
             for t in trends[:5]:
                 print(f"  {t['rank']}. {t['term']} ({t['tweet_volume_text']})")
         
+        # Calcular tiempos
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        scraping_time = datetime.now(mexico_tz)
+        first_trend_minutes = trends[0]['minutes_since_update'] if trends and trends[0].get('minutes_since_update') is not None else None
+        
+        if first_trend_minutes is not None:
+            data_updated_time = scraping_time - timedelta(minutes=first_trend_minutes)
+        else:
+            data_updated_time = scraping_time
+        
         result = {
-            "timestamp": datetime.now().isoformat(),
-            "timestamp_mexico": get_trend_time_in_mexico(trends[0]['minutes_since_update'] if trends and trends[0].get('minutes_since_update') is not None else None),
+            "scraping_time": {
+                "timestamp_iso": scraping_time.isoformat(),
+                "day": scraping_time.day,
+                "month": scraping_time.month,
+                "year": scraping_time.year,
+                "hour": scraping_time.hour,
+                "minute": scraping_time.minute,
+                "description": "Hora en la que se ejecutó el scraping"
+            },
+            "data_source_updated_time": {
+                "timestamp_iso": data_updated_time.isoformat(),
+                "day": data_updated_time.day,
+                "month": data_updated_time.month,
+                "year": data_updated_time.year,
+                "hour": data_updated_time.hour,
+                "minute": data_updated_time.minute,
+                "minutes_ago": first_trend_minutes if first_trend_minutes is not None else 0,
+                "description": "Hora en la que la fuente actualizó los datos por última vez"
+            },
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": valid_count,
-            "data_age_minutes": trends[0]['minutes_since_update'] if trends and trends[0].get('minutes_since_update') is not None else 0,
             "trends": trends,
             "source": "xtrends.iamrohit.in",
             "status": "success" if valid_count > 0 else "error",
@@ -277,42 +341,99 @@ def scrape_twitter_trends_mexico():
     
     except requests.exceptions.Timeout:
         print("[v0] ERROR: Timeout - La solicitud tardó demasiado")
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        scraping_time = datetime.now(mexico_tz)
         return {
-            "timestamp": datetime.now().isoformat(),
-            "timestamp_mexico": get_trend_time_in_mexico(),
+            "scraping_time": {
+                "timestamp_iso": scraping_time.isoformat(),
+                "day": scraping_time.day,
+                "month": scraping_time.month,
+                "year": scraping_time.year,
+                "hour": scraping_time.hour,
+                "minute": scraping_time.minute,
+                "description": "Hora en la que se ejecutó el scraping"
+            },
+            "data_source_updated_time": {
+                "timestamp_iso": scraping_time.isoformat(),
+                "day": scraping_time.day,
+                "month": scraping_time.month,
+                "year": scraping_time.year,
+                "hour": scraping_time.hour,
+                "minute": scraping_time.minute,
+                "minutes_ago": 0,
+                "description": "Hora en la que la fuente actualizó los datos por última vez"
+            },
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": 0,
             "trends": [],
-            "source": "Twitter Trends Scraper",
+            "source": "xtrends.iamrohit.in",
             "status": "error",
             "error": "Timeout en la solicitud HTTP"
         }
     
     except requests.exceptions.ConnectionError as e:
         print(f"[v0] ERROR: Conexión rechazada - {e}")
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        scraping_time = datetime.now(mexico_tz)
         return {
-            "timestamp": datetime.now().isoformat(),
-            "timestamp_mexico": get_trend_time_in_mexico(),
+            "scraping_time": {
+                "timestamp_iso": scraping_time.isoformat(),
+                "day": scraping_time.day,
+                "month": scraping_time.month,
+                "year": scraping_time.year,
+                "hour": scraping_time.hour,
+                "minute": scraping_time.minute,
+                "description": "Hora en la que se ejecutó el scraping"
+            },
+            "data_source_updated_time": {
+                "timestamp_iso": scraping_time.isoformat(),
+                "day": scraping_time.day,
+                "month": scraping_time.month,
+                "year": scraping_time.year,
+                "hour": scraping_time.hour,
+                "minute": scraping_time.minute,
+                "minutes_ago": 0,
+                "description": "Hora en la que la fuente actualizó los datos por última vez"
+            },
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": 0,
             "trends": [],
-            "source": "Twitter Trends Scraper",
+            "source": "xtrends.iamrohit.in",
             "status": "error",
             "error": f"Error de conexión: {str(e)}"
         }
     
     except Exception as e:
         print(f"[v0] ERROR GENERAL: {type(e).__name__}: {e}")
+        mexico_tz = pytz.timezone('America/Mexico_City')
+        scraping_time = datetime.now(mexico_tz)
         return {
-            "timestamp": datetime.now().isoformat(),
-            "timestamp_mexico": get_trend_time_in_mexico(),
+            "scraping_time": {
+                "timestamp_iso": scraping_time.isoformat(),
+                "day": scraping_time.day,
+                "month": scraping_time.month,
+                "year": scraping_time.year,
+                "hour": scraping_time.hour,
+                "minute": scraping_time.minute,
+                "description": "Hora en la que se ejecutó el scraping"
+            },
+            "data_source_updated_time": {
+                "timestamp_iso": scraping_time.isoformat(),
+                "day": scraping_time.day,
+                "month": scraping_time.month,
+                "year": scraping_time.year,
+                "hour": scraping_time.hour,
+                "minute": scraping_time.minute,
+                "minutes_ago": 0,
+                "description": "Hora en la que la fuente actualizó los datos por última vez"
+            },
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": 0,
             "trends": [],
-            "source": "Twitter Trends Scraper",
+            "source": "xtrends.iamrohit.in",
             "status": "error",
             "error": str(e)
         }
@@ -328,6 +449,6 @@ if __name__ == "__main__":
     
     print(f"\n[v0] ========== SCRAPING COMPLETADO ==========")
     print(f"[v0] Status: {data['status']}")
-    print(f"[v0] Antigüedad de datos: {data.get('data_age_minutes', 'N/A')} minutos")
+    print(f"[v0] Antigüedad de datos: {data.get('data_source_updated_time', {}).get('minutes_ago', 'N/A')} minutos")
     print(f"[v0] Tendencias extraídas: {data['total_trends']}")
     print("\n" + json.dumps(data, ensure_ascii=False, indent=2))

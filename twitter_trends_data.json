@@ -1,0 +1,672 @@
+{
+  "scraping_time": {
+    "timestamp_iso": "2025-11-02T15:34:36.273249-06:00",
+    "day": 2,
+    "month": 11,
+    "year": 2025,
+    "hour": 15,
+    "minute": 34,
+    "description": "Hora en la que se ejecutó el scraping"
+  },
+  "data_source_updated_time": {
+    "timestamp_iso": "2025-11-02T15:34:36.273249-06:00",
+    "day": 2,
+    "month": 11,
+    "year": 2025,
+    "hour": 15,
+    "minute": 34,
+    "minutes_ago": 0,
+    "description": "Hora en la que la fuente actualizó los datos por última vez"
+  },
+  "country": "México",
+  "platform": "Twitter/X",
+  "total_trends": 40,
+  "trends": [
+    {
+      "rank": 1,
+      "term": "Carlos Manzo",
+      "tweet_volume": 710600,
+      "tweet_volume_text": "710.6k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:33.968348-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Carlos+Manzo"
+    },
+    {
+      "rank": 2,
+      "term": "Charles",
+      "tweet_volume": 83400,
+      "tweet_volume_text": "83.4k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:33.968348-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Charles"
+    },
+    {
+      "rank": 3,
+      "term": "#FueClaudia",
+      "tweet_volume": 41600,
+      "tweet_volume_text": "41.6k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:33.968348-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=%23FueClaudia"
+    },
+    {
+      "rank": 4,
+      "term": "Michoacán",
+      "tweet_volume": 219800,
+      "tweet_volume_text": "219.8k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:33.968348-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Michoac%C3%A1n"
+    },
+    {
+      "rank": 5,
+      "term": "#foximpactonfl",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:33.969350-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=%23foximpactonfl"
+    },
+    {
+      "rank": 6,
+      "term": "Calderón",
+      "tweet_volume": 16100,
+      "tweet_volume_text": "16.1k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.346149-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Calder%C3%B3n"
+    },
+    {
+      "rank": 7,
+      "term": "Alfredo Ramírez Bedolla",
+      "tweet_volume": 24300,
+      "tweet_volume_text": "24.3k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.346149-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Alfredo+Ram%C3%ADrez+Bedolla"
+    },
+    {
+      "rank": 8,
+      "term": "HAPPY 25 AARON MERCURY",
+      "tweet_volume": 62200,
+      "tweet_volume_text": "62.2k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.346149-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=HAPPY+25+AARON+MERCURY"
+    },
+    {
+      "rank": 9,
+      "term": "Alexandra",
+      "tweet_volume": 17900,
+      "tweet_volume_text": "17.9k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.347168-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Alexandra"
+    },
+    {
+      "rank": 10,
+      "term": "#EllasEnVix",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.347168-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=%23EllasEnVix"
+    },
+    {
+      "rank": 11,
+      "term": "Guardia Nacional",
+      "tweet_volume": 14500,
+      "tweet_volume_text": "14.5k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.742131-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Guardia+Nacional"
+    },
+    {
+      "rank": 12,
+      "term": "Cállate",
+      "tweet_volume": 10900,
+      "tweet_volume_text": "10.9k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.742131-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=C%C3%A1llate"
+    },
+    {
+      "rank": 13,
+      "term": "#HereWeGo",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.742131-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=%23HereWeGo"
+    },
+    {
+      "rank": 14,
+      "term": "Steelers",
+      "tweet_volume": 44100,
+      "tweet_volume_text": "44.1k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.743135-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Steelers"
+    },
+    {
+      "rank": 15,
+      "term": "Politiquería",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.984511-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Politiquer%C3%ADa"
+    },
+    {
+      "rank": 16,
+      "term": "Miserable",
+      "tweet_volume": 61200,
+      "tweet_volume_text": "61.2k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.984511-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Miserable"
+    },
+    {
+      "rank": 17,
+      "term": "Pumas",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.984511-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Pumas"
+    },
+    {
+      "rank": 18,
+      "term": "Valentina Murrieta",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.985797-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Valentina+Murrieta"
+    },
+    {
+      "rank": 19,
+      "term": "Elche",
+      "tweet_volume": 37100,
+      "tweet_volume_text": "37.1k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:34.985797-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Elche"
+    },
+    {
+      "rank": 20,
+      "term": "Xolos",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.311331-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Xolos"
+    },
+    {
+      "rank": 21,
+      "term": "Hipócrita",
+      "tweet_volume": 17300,
+      "tweet_volume_text": "17.3k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.311331-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Hip%C3%B3crita"
+    },
+    {
+      "rank": 22,
+      "term": "#NFLEnVix",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.311331-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=%23NFLEnVix"
+    },
+    {
+      "rank": 23,
+      "term": "Rashford",
+      "tweet_volume": 29100,
+      "tweet_volume_text": "29.1k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.312335-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Rashford"
+    },
+    {
+      "rank": 24,
+      "term": "Manzano",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.312335-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Manzano"
+    },
+    {
+      "rank": 25,
+      "term": "Ayotzinapa",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.438978-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Ayotzinapa"
+    },
+    {
+      "rank": 26,
+      "term": "Gabinete de Seguridad",
+      "tweet_volume": 22600,
+      "tweet_volume_text": "22.6k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.438978-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Gabinete+de+Seguridad"
+    },
+    {
+      "rank": 27,
+      "term": "JJ Macías",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.438978-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=JJ+Mac%C3%ADas"
+    },
+    {
+      "rank": 28,
+      "term": "Inútiles",
+      "tweet_volume": 12700,
+      "tweet_volume_text": "12.7k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.438978-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=In%C3%BAtiles"
+    },
+    {
+      "rank": 29,
+      "term": "Asesino",
+      "tweet_volume": 44200,
+      "tweet_volume_text": "44.2k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.440169-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Asesino"
+    },
+    {
+      "rank": 30,
+      "term": "Packers",
+      "tweet_volume": 37500,
+      "tweet_volume_text": "37.5k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.598710-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Packers"
+    },
+    {
+      "rank": 31,
+      "term": "Chinguen",
+      "tweet_volume": 17500,
+      "tweet_volume_text": "17.5k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.598710-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Chinguen"
+    },
+    {
+      "rank": 32,
+      "term": "Rodrigo López",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.598710-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Rodrigo+L%C3%B3pez"
+    },
+    {
+      "rank": 33,
+      "term": "CHTPM",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.599591-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=CHTPM"
+    },
+    {
+      "rank": 34,
+      "term": "Vete",
+      "tweet_volume": 17200,
+      "tweet_volume_text": "17.2k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:35.599591-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Vete"
+    },
+    {
+      "rank": 35,
+      "term": "Carroñeros",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:36.016687-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Carro%C3%B1eros"
+    },
+    {
+      "rank": 36,
+      "term": "Harfuch",
+      "tweet_volume": 25800,
+      "tweet_volume_text": "25.8k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:36.016687-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Harfuch"
+    },
+    {
+      "rank": 37,
+      "term": "Christopher Landau",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:36.016687-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Christopher+Landau"
+    },
+    {
+      "rank": 38,
+      "term": "Ineptos",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:36.017695-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Ineptos"
+    },
+    {
+      "rank": 39,
+      "term": "Play-In",
+      "tweet_volume": 5000,
+      "tweet_volume_text": "Under 10k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:36.017695-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Play-In"
+    },
+    {
+      "rank": 40,
+      "term": "Bukele",
+      "tweet_volume": 40100,
+      "tweet_volume_text": "40.1k",
+      "minutes_since_update": null,
+      "trend_time_mexico": {
+        "timestamp_iso": "2025-11-02T15:34:36.272745-06:00",
+        "day": 2,
+        "month": 11,
+        "year": 2025,
+        "hour": 15,
+        "minute": 34
+      },
+      "url": "https://twitter.com/search?q=Bukele"
+    }
+  ],
+  "source": "xtrends.iamrohit.in",
+  "status": "success",
+  "debug": {
+    "rows_processed": 51,
+    "ads_skipped": 1
+  }
+}
