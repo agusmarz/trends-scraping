@@ -357,13 +357,10 @@ if __name__ == "__main__":
     print("[v0] Iniciando scraper de twitter-trending.com...\n")
     data = scrape_twitter_trending_mexico()
     
-    if should_update_based_on_freshness(data, max_minutes=20):
-        output_file = 'twitter_trending_com_data.json'
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f"\n[v0] ✓ Datos guardados en {output_file}")
-    else:
-        print(f"\n[v0] ✗ Datos NO se guardaron (no lo suficientemente frescos)")
+    output_file = 'twitter_trending_com_data.json'
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"\n[v0] ✓ Datos guardados en {output_file}")
     
     print(f"\n[v0] ========== SCRAPING COMPLETADO ==========")
     print(f"[v0] Status: {data['status']}")
@@ -374,4 +371,4 @@ if __name__ == "__main__":
             minutes = t.get('minutes_since_creation', 'N/A')
             trend_time = t.get('trend_time_mexico', {})
             time_str = f"{trend_time.get('hour', 0):02d}:{trend_time.get('minute', 0):02d}"
-            print(f"  #{t['rank']}: {t['term']} ({t['tweet_volume']} tweets, hace {minutes} min, hora: {time_str})")
+            print(f"  #{t['rank']}: {t['term']} ({t['tweet_volume']} tweets, antigüedad: {minutes} min, hora: {time_str})")

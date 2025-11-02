@@ -263,6 +263,7 @@ def scrape_twitter_trends_mexico():
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": valid_count,
+            "data_age_minutes": trends[0]['minutes_since_update'] if trends and trends[0].get('minutes_since_update') is not None else 0,
             "trends": trends,
             "source": "xtrends.iamrohit.in",
             "status": "success" if valid_count > 0 else "error",
@@ -320,15 +321,13 @@ if __name__ == "__main__":
     print("[v0] Iniciando scraper de Twitter Trends...")
     data = scrape_twitter_trends_mexico()
     
-    if should_update_based_on_freshness(data, max_minutes=20):
-        output_file = 'twitter_trends_data.json'
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        print(f"\n[v0] ✓ Datos guardados en {output_file}")
-    else:
-        print(f"\n[v0] ✗ Datos NO se guardaron (no lo suficientemente frescos)")
+    output_file = 'twitter_trends_data.json'
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"\n[v0] ✓ Datos guardados en {output_file}")
     
     print(f"\n[v0] ========== SCRAPING COMPLETADO ==========")
     print(f"[v0] Status: {data['status']}")
+    print(f"[v0] Antigüedad de datos: {data.get('data_age_minutes', 'N/A')} minutos")
     print(f"[v0] Tendencias extraídas: {data['total_trends']}")
     print("\n" + json.dumps(data, ensure_ascii=False, indent=2))
