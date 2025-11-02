@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tendencias de Twitter - México 🐦</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a1419 0%, #192734 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #1DA1F2 0%, #0A91DA 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: #8899a6;
+            font-size: 1.1rem;
+        }
+
+        .timestamp {
+            text-align: center;
+            color: #657786;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+
+        .trends-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .trend-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .trend-card:hover {
+            background: rgba(29, 161, 242, 0.1);
+            border-color: rgba(29, 161, 242, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .trend-rank {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1DA1F2;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .trend-info {
+            flex: 1;
+        }
+
+        .trend-term {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+
+        .trend-volume {
+            color: #8899a6;
+            font-size: 0.9rem;
+        }
+
+        .trend-badge {
+            background: rgba(29, 161, 242, 0.2);
+            color: #1DA1F2;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8899a6;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #1DA1F2;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px 25px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #1DA1F2;
+        }
+
+        .stat-label {
+            color: #8899a6;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        .error {
+            background: rgba(224, 36, 94, 0.1);
+            border: 1px solid rgba(224, 36, 94, 0.3);
+            color: #e0245e;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .trend-card {
+                padding: 12px;
+            }
+
+            .trend-rank {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐦 Tendencias en Twitter - México</h1>
+            <p>Los tópicos más comentados en X</p>
+        </div>
+
+        <div id="content">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 20px;">Cargando tendencias...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadTrends() {
+            try {
+                const response = await fetch('/twitter_trends_data.json');
+                
+                if (!response.ok) {
+                    throw new Error('No se encontró el archivo de datos');
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'error') {
+                    throw new Error(data.error);
+                }
+
+                renderTrends(data);
+            } catch (error) {
+                console.error("[v0] Error:", error);
+                renderError(error.message);
+            }
+        }
+
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
+            return num.toString();
+        }
+
+        function renderTrends(data) {
+            const content = document.getElementById('content');
+            const timestamp = new Date(data.timestamp).toLocaleString('es-MX');
+
+            let html = `
+                <div class="timestamp">
+                    Actualizado: ${timestamp}
+                </div>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="stat-number">${data.total_trends}</div>
+                        <div class="stat-label">Tendencias totales</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">📍 ${data.country}</div>
+                    </div>
+                </div>
+
+                <div class="trends-grid">
+            `;
+
+            data.trends.forEach(trend => {
+                html += `
+                    <div class="trend-card" onclick="openTwitterTrend('${encodeURIComponent(trend.term)}')">
+                        <div class="trend-rank">#${trend.rank}</div>
+                        <div class="trend-info">
+                            <div class="trend-term">${trend.term}</div>
+                            <div class="trend-volume">💬 ${formatNumber(trend.tweet_volume)} tweets</div>
+                        </div>
+                        <div class="trend-badge">🔥</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            content.innerHTML = html;
+        }
+
+        function renderError(message) {
+            const content = document.getElementById('content');
+            content.innerHTML = `
+                <div class="error">
+                    <strong>Error al cargar las tendencias:</strong><br>
+                    ${message}
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="loadTrends()" style="
+                        background: #1DA1F2;
+                        color: white;
+                        border: none;
+                        padding: 10px 20px;
+                        border-radius: 20px;
+                        cursor: pointer;
+                        font-size: 1rem;
+                        font-weight: 600;
+                    ">
+                        Reintentar
+                    </button>
+                </div>
+            `;
+        }
+
+        function openTwitterTrend(term) {
+            window.open(`https://twitter.com/search?q=${term}`, '_blank');
+        }
+
+        window.addEventListener('load', loadTrends);
+        setInterval(loadTrends, 30 * 60 * 1000);
+    </script>
+</body>
+</html>
