@@ -20,23 +20,12 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 pytz
+          pip install playwright beautifulsoup4 pytz
+          playwright install chromium
 
       - name: Run twitter-trending.com scraper
         run: |
-          python - <<'PY'
-          import json
-          import sys
-          from pathlib import Path
-          
-          sys.path.append('scripts')
-          from scrape_tw_trends_1 import scrape_twitter_trending_mexico
-          
-          data = scrape_twitter_trending_mexico()
-          output = Path('twitter_trending_com_data.json')
-          output.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding='utf-8')
-          print(f"Saved data to {output}")
-          PY
+          python scripts/scrape_tw_trends_1.py
       
       - name: Run xtrends scraper
         run: |
