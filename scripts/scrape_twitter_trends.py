@@ -4,6 +4,8 @@ import json
 from datetime import datetime, timedelta
 import re
 import pytz
+import random
+import time
 
 def normalize_tweet_count(count_str):
     """
@@ -120,6 +122,10 @@ def scrape_twitter_trends_mexico():
     print("[v0] ========== INICIANDO SCRAPING TWITTER TRENDS ==========")
     print(f"[v0] URL: {url}")
     
+    delay_before_request = random.uniform(1, 4)
+    print(f"[v0] Esperando {delay_before_request:.1f}s antes de solicitar...")
+    time.sleep(delay_before_request)
+    
     try:
         # Headers realistas
         headers = {
@@ -136,10 +142,13 @@ def scrape_twitter_trends_mexico():
         print(f"[v0] Status code: {response.status_code}")
         print(f"[v0] Tamaño del HTML: {len(response.text)} caracteres")
         
+        delay_after_response = random.uniform(0.5, 2)
+        time.sleep(delay_after_response)
+        
         print("[v0] Parseando HTML...")
         soup = BeautifulSoup(response.text, 'html.parser')
         
-        # Buscar la tabla con id="twitter-trends"
+        
         print("[v0] Buscando tabla con id='twitter-trends'...")
         trends_table = soup.find('table', {'id': 'twitter-trends'})
         
@@ -159,7 +168,6 @@ def scrape_twitter_trends_mexico():
         
         print("[v0] Tabla encontrada. Extrayendo filas...")
         
-        # Buscar todas las filas de la tabla (excluyendo header)
         tbody = trends_table.find('tbody', {'id': 'copyData'})
         if not tbody:
             print("[v0] ERROR: tbody no encontrado")
@@ -183,6 +191,10 @@ def scrape_twitter_trends_mexico():
         ad_count = 0
         
         for idx, row in enumerate(rows):
+            if idx % 5 == 0 and idx > 0:
+                delay_between_rows = random.uniform(0.1, 0.5)
+                time.sleep(delay_between_rows)
+            
             # Ignorar filas de anuncios (que tienen ads)
             if row.find('ins', {'class': 'adsbygoogle'}):
                 ad_count += 1
@@ -190,24 +202,21 @@ def scrape_twitter_trends_mexico():
                 continue
             
             try:
-                # Buscar el link con clase 'tweet'
+                
                 tweet_link = row.find('a', {'class': 'tweet'})
                 
                 if not tweet_link:
                     print(f"[v0] Fila {idx}: No contiene link .tweet")
                     continue
                 
-                # Extraer datos del link
                 rank = tweet_link.get('rank', str(valid_count + 1))
                 trend_name = tweet_link.text.strip()
                 tweet_count_str = tweet_link.get('tweetcount', tweet_link.get('tweetc', '0'))
                 
-                # Validar datos
                 if not trend_name or len(trend_name) < 1:
                     print(f"[v0] Fila {idx}: Nombre vacío")
                     continue
                 
-                # Normalizar volumen
                 tweet_volume = normalize_tweet_count(tweet_count_str)
                 
                 if tweet_volume == 1000:
@@ -233,7 +242,6 @@ def scrape_twitter_trends_mexico():
                 
                 print(f"[v0] ✓ Trend {valid_count}: '{trend_name}' - {tweet_count_str}")
                 
-                # Limitar a 40 tendencias
                 if valid_count >= 40:
                     break
             

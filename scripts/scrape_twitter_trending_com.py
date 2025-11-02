@@ -4,6 +4,8 @@ import json
 import re
 from datetime import datetime, timedelta
 import pytz
+import random
+import time
 
 def extract_minutes_ago(time_text):
     """
@@ -91,16 +93,15 @@ def scrape_twitter_trending_mexico():
     """
     Extrae tendencias de https://www.twitter-trending.com/mexico/en
     usando JSON-LD incrustado en el HTML (sin depender de JavaScript).
-    
-    Estrategia:
-    1. Extraer JSON-LD ItemList con tendencias
-    2. Los primeros items en la lista son los más recientes
-    3. Retornar top tendencias con estructura clara
     """
     url = 'https://www.twitter-trending.com/mexico/en'
     
     print("[v0] ========== INICIANDO SCRAPING TWITTER-TRENDING.COM ==========")
     print(f"[v0] URL: {url}")
+    
+    delay_before_request = random.uniform(1, 4)
+    print(f"[v0] Esperando {delay_before_request:.1f}s antes de solicitar...")
+    time.sleep(delay_before_request)
     
     try:
         headers = {
@@ -117,6 +118,9 @@ def scrape_twitter_trending_mexico():
         print(f"[v0] Status code: {response.status_code} ✓")
         print(f"[v0] Tamaño del HTML: {len(response.text)} caracteres")
         
+        delay_after_response = random.uniform(0.5, 2)
+        time.sleep(delay_after_response)
+        
         print("[v0] Parseando HTML con BeautifulSoup...")
         soup = BeautifulSoup(response.text, 'html.parser')
         
@@ -128,6 +132,9 @@ def scrape_twitter_trending_mexico():
             return generate_example_data()
         
         print("[v0] ✓ JSON-LD encontrado")
+        
+        delay_before_parse = random.uniform(0.2, 1)
+        time.sleep(delay_before_parse)
         
         try:
             schema_data = json.loads(json_ld_script.string)
@@ -149,6 +156,10 @@ def scrape_twitter_trending_mexico():
         trends_list = []
         
         for idx, item in enumerate(items[:40]):
+            if idx % 10 == 0 and idx > 0:
+                delay_between_items = random.uniform(0.1, 0.3)
+                time.sleep(delay_between_items)
+            
             if item.get('@type') != 'ListItem':
                 continue
                 

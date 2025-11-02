@@ -3,6 +3,8 @@ import asyncio
 from datetime import datetime, timedelta
 import pytz
 from playwright.async_api import async_playwright
+import random
+import time
 
 def get_mexico_trend_time():
     """
@@ -35,11 +37,16 @@ async def scrape_google_trends_mexico():
         print("[v0] Navegando a Google Trends México...")
         print(f"[v0] URL: {url}")
         
+        delay_before_nav = random.uniform(1, 3)
+        await asyncio.sleep(delay_before_nav)
+        
         try:
             await page.goto(url, wait_until='domcontentloaded', timeout=30000)
             
             print("[v0] DOM cargado. Esperando a que JavaScript renderice...")
-            await page.wait_for_timeout(5000)
+            
+            delay_after_load = random.uniform(2, 5)
+            await asyncio.sleep(delay_after_load)
             
             print("[v0] Extrayendo tendencias del DOM...")
             
