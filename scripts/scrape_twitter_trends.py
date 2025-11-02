@@ -97,7 +97,6 @@ def get_trend_time_in_mexico(minutes_ago=None):
     now = datetime.now(mexico_tz)
     
     if minutes_ago is not None and isinstance(minutes_ago, int):
-        # Restar los minutos para obtener la hora real de la tendencia
         trend_time = now - timedelta(minutes=minutes_ago)
     else:
         # Si no hay info de minutos, usar hora actual
@@ -252,7 +251,7 @@ def scrape_twitter_trends_mexico():
         
         result = {
             "timestamp": datetime.now().isoformat(),
-            "timestamp_mexico": get_trend_time_in_mexico(),
+            "timestamp_mexico": get_trend_time_in_mexico(trends[0]['minutes_since_update'] if trends and trends[0].get('minutes_since_update') is not None else None),
             "country": "México",
             "platform": "Twitter/X",
             "total_trends": valid_count,

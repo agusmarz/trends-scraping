@@ -191,18 +191,25 @@ def scrape_twitter_trending_mexico():
         
         print(f"\n[v0] ✓ {len(trends_list)} tendencias extraídas correctamente")
         
+        first_trend_minutes = trends_list[0]['minutes_since_creation'] if trends_list and trends_list[0].get('minutes_since_creation') is not None else None
+        
         mexico_tz = pytz.timezone('America/Mexico_City')
         mexico_time_now = datetime.now(mexico_tz)
+        
+        if first_trend_minutes is not None:
+            mexico_time_data = (mexico_time_now - timedelta(minutes=first_trend_minutes))
+        else:
+            mexico_time_data = mexico_time_now
         
         result = {
             "timestamp": datetime.now().isoformat(),
             "timestamp_mexico": {
-                "timestamp_iso": mexico_time_now.isoformat(),
-                "day": mexico_time_now.day,
-                "month": mexico_time_now.month,
-                "year": mexico_time_now.year,
-                "hour": mexico_time_now.hour,
-                "minute": mexico_time_now.minute
+                "timestamp_iso": mexico_time_data.isoformat(),
+                "day": mexico_time_data.day,
+                "month": mexico_time_data.month,
+                "year": mexico_time_data.year,
+                "hour": mexico_time_data.hour,
+                "minute": mexico_time_data.minute
             },
             "country": "México",
             "platform": "Twitter/X",
