@@ -1,0 +1,39 @@
+name: Scrape Google Trends
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright pytz
+          playwright install chromium
+
+      - name: Run Google Trends scraper
+        run: |
+          python scripts/scrape_gt_trends.py
+
+      - name: Prepare timestamp
+        id: timestamp
+        run: echo "CURRENT_TIMESTAMP=$(date +'%H%M_%d%m%Y')" >> $GITHUB_ENV
+
+      - name: Upload Google Trends artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-trends-${{ env.CURRENT_TIMESTAMP }}
+          path: trends_data.json
+          if-no-files-found: error
